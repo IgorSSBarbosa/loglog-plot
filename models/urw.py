@@ -17,4 +17,4 @@ def urw(k,a=-1,b=+1):
 if __name__=="__main__":
     ''' Example of usage '''
     k = 15
-    print(srw(k))
+    print(urw(k))
