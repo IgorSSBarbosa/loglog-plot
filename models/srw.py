@@ -1,4 +1,5 @@
 import numpy as np
+import taichi as ti
 
 '''  Defines a simple random walk, each step is +1 or -1
 - k is the number of steps
@@ -6,6 +7,7 @@ import numpy as np
 - (1-q) is the probability of an downward step (-1)
 '''
 
+@ti.data_oriented
 def srw(k,q=0.5):
     x = np.random.choice([-1,1],k, p=[1-q, q])
     rw = sum(x)

@@ -1,4 +1,5 @@
 import numpy as np
+import taichi as ti
 
 '''  Defines a simple random walk, each step is choosen uniformly on [a,b]
 - k is the number of steps
@@ -7,6 +8,7 @@ import numpy as np
 - [a,b] must be a valid interval
 '''
 
+@ti.data_oriented
 def urw(k,a=-1,b=+1):
     assert a < b, "[a,b] must be a valid interaval, a<b"
 
