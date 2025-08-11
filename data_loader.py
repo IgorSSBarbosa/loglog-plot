@@ -155,7 +155,7 @@ def main():
     print(f'k1 : {k1}')
 
     data, dom, time_taken = simulator.generate_full_data(k1, k2, numb_simul)
-    simulator.save_data(data, dom, time_taken, numb_simul//100) # saving as json the results
+    simulator.save_data(data, dom, time_taken, numb_simul) # saving as json the results
 
 
 if __name__=='__main__':
