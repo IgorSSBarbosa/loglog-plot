@@ -32,7 +32,7 @@ class DataLoader():
             "--model", 
             type=str,
             choices = ["percolation", "srw", "urw","rwre"],
-            default = "percolation",
+            default = "srw",
             help = "Chooses a model to simulate, the options are \n "
             "'percoltion' - to bond percolation in 2 dimensions, \n "
             "'srw' - to Simple Random walk in 1 dimension, \n"
