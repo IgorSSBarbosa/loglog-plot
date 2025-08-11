@@ -1,26 +1,30 @@
 # This program selects a model and saves the results of simulations
 import argparse
 import json
-from time import time
-import taichi as ti
+import os
+from time import localtime, strftime, time
 import numpy as np
 from tqdm import tqdm
 
 from models.srw import srw
 from models.urw import urw
-from models.percolation import largest_cluster_size as percolation
+from models.percolation import largest_cluster_size as perc
+from meta_time_algorithm import simulation_manager
 
-@ti.data_oriented
 class DataLoader():
     def __init__(self, args):
-        threads = args["threads"]
-        # Initialize Taichi (CPU, parallel)
-        ti.init(arch=ti.cpu, cpu_max_num_threads=threads)
-
-        self.model = args["model"]
+        model_dict = {
+            'srw': srw,
+            'urw': urw,
+            'percolation': perc,
+        }
+        self.model_name = args["model"]
+        self.model = model_dict[self.model_name]
         self.rho = args["rho"]
-        self.time_buget = args["time_budget"]
+        self.time_budget = args["time_budget"]
         self.savedir = args["save_directory"]
+        self.J = args['j']
+        self.pre_simulation_budget = args['pre_simulation_budget']
 
     @staticmethod
     def add_arguments(parser):
@@ -28,7 +32,7 @@ class DataLoader():
             "--model", 
             type=str,
             choices = ["percolation", "srw", "urw","rwre"],
-            default = "srw",
+            default = "percolation",
             help = "Chooses a model to simulate, the options are \n "
             "'percoltion' - to bond percolation in 2 dimensions, \n "
             "'srw' - to Simple Random walk in 1 dimension, \n"
@@ -44,7 +48,7 @@ class DataLoader():
             "-tb",
             "--time_budget",
             type=float,
-            default= 10,
+            default= 100,
             help= "Budget time, in seconds, approximally to total time to make the simulations"
         )
         parser.add_argument(
@@ -54,63 +58,107 @@ class DataLoader():
             default="simulation_data",
         )
         parser.add_argument(
-            "--threads",
+            "--numb_simul",
+            "-ns",
             type=int,
-            default=8,
-            help= "maximum number of threads for parallelization"
+            default=500,
+        )
+        parser.add_argument(
+            "--k1",
+            type=int,
+            default=4,
+        )
+        parser.add_argument(
+            "--k2",
+            type=int,
+            default=10,
+        )
+        parser.add_argument(
+            "--j",
+            type=int,
+            default=10
+        )
+        parser.add_argument(
+            "--pre_simulation_budget",
+            type=float,
+            default=0.01
         )
 
-    def save_metadata(self, time_taken, dom):
+    def save_data(self,data, dom, time_taken, numb_simul):
+        # Create a dictionary to save the data
         metadata = {
-            "model": self.model,
+            "model": self.model_name,
             "rho":self.rho,
-            "time_budget": self.time_buget, 
+            "time_budget": self.time_budget, 
             "time_taken": time_taken,
             "n_variation": dom,
+            "number_of_simulations": numb_simul,
+            "results": data.tolist(),  # Convert ndarray to list
         }
-        metadata_path = self.model_dir + "/" + self.model + "/metadata.json"
+
+        # create diretory
+        # Get the local time and format it
+        now = localtime()
+        now_str = strftime("%m-%d-%Y_%H-%M-%S", now)
+
+        out_put_path = self.savedir + "/" + self.model_name + now_str + "/"
+        self.model_dir = out_put_path
+        print(out_put_path)
+
+        os.makedirs(out_put_path, exist_ok=True)
+
+        metadata_path = out_put_path + "/metadata.json"
+        print(f'save data in: {metadata_path}')
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=4)
 
-    @ti.func
     def generate_data(self, model, n, numb_simul):
         data = np.zeros(numb_simul)
+        pbar = tqdm(range(numb_simul),leave=True)
+        pbar.set_description(f'Sampling for {n} size ...')
+
         for i  in range(numb_simul):
             data[i] = model(n)
         
         return data
     
-    def generate_full_data(self, model, rho, k1, k2, numb_simul):
+    def generate_full_data(self, k1, k2, numb_simul):
         assert k1 < k2, "[k1, k2] must be a valid interval, k1 < k2"
 
         start_time = time()
+
         full_data = np.empty((k2-k1+1, numb_simul))
-        progress_bar = tqdm(range(k2-k1+1, numb_simul))
+        progress_bar = tqdm(range(k1, k2+1))
+        progress_bar.set_description('Simulation progress')
 
+        dom = []
         for i,k in enumerate(progress_bar):
-            n = pow(rho,k)
-            full_data[i,:] = np.array(
-                self.generate_data(n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
-            )
+            n = pow(self.rho,k)
+            dom.append(n)
+            full_data[i,:] = self.generate_data(self.model,n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
         
+        end_time = time()
+        time_taken = end_time - start_time
+        return full_data, dom, time_taken
 
 
-    @ti.kernel
-    def run(self):
-        rho=2
-        k1,k2 = 3, 6
-        numb_simul = 10
-        model = srw
-        df = self.generate_full_data(model,rho, k1, k2, numb_simul)
+def main():
+    # define the arguments parser
+    parser = argparse.ArgumentParser(description="Initialization Arguments")
+    DataLoader.add_arguments(parser)
+    args = parser.parse_args() # Use empty list to avoid command line parsing
 
-        print(df.shape)
+    simulator = DataLoader(vars(args))
+
+    numb_simul, k2 = simulation_manager(simulator.model, simulator.time_budget, simulator.pre_simulation_budget)
+    k1 = np.max([k2 - simulator.J,0])
+
+    data, dom, time_taken = simulator.generate_full_data(k1, k2, numb_simul)
+    simulator.save_data(data, dom, time_taken, numb_simul) # saving as json the results
+
+
+if __name__=='__main__':
+    main()
 
     
         
-if __name__=="__main__":
-    parser = argparse.ArgumentParser()
-    DataLoader.add_arguments(parser)
-    args = vars(parser.parse_args()) # using default arguments
-
-    data = DataLoader(args)
-    data.run()
