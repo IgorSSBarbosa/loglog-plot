@@ -15,7 +15,7 @@ class LoglogPlotter():
         parser.add_argument(
             "--data_path",
             type=str,
-            default='simulation_data/percolation08-06-2025_10-32-50/metadata.json'
+            default='simulation_data/srw08-11-2025_19-20-57/metadata.json'
         )
         parser.add_argument(
             "--basex",
