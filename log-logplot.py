@@ -7,7 +7,7 @@ from scipy.stats import linregress
 class LoglogPlotter():
     def __init__(self,args):
         self.simulation = args["data_path"]
-        self.data_path = 'simulation/'+ self.simulation + '/metadata.json'
+        self.data_path = 'simulation_data/'+ self.simulation + '/metadata.json'
         self.basex = args["basex"]
         self.basey = args["basey"]
 
