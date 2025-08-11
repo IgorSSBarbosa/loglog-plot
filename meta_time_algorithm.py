@@ -114,7 +114,7 @@ def simulation_manager(model,total_budget,budget_time=0.1):
     numb_simul_aux,k2_aux = optimal_sizes(bd_aux, budget_time*total_budget, d_aux*(1+error_margin))
     print(f"numbsimul_aux={numb_simul_aux}, k2_aux={k2_aux}")
 
-    numb_simul_aux = np.max(10, numb_simul_aux//100)
+    numb_simul_aux = np.max((10, numb_simul_aux//100))
 
     # Better approximation of constants bd,d
     print(f"running with model={model}, total_budget = {budget_time*total_budget}, numbsimulations= {numb_simul_aux} ")

@@ -114,7 +114,7 @@ class DataLoader():
 
     def generate_data(self, model, n, numb_simul):
         data = np.zeros(numb_simul)
-        pbar = tqdm(range(numb_simul),leave=True)
+        pbar = tqdm(range(numb_simul),leave=False)
         pbar.set_description(f'Sampling for {n} size ...')
 
         for i  in range(numb_simul):
@@ -128,7 +128,7 @@ class DataLoader():
         start_time = time()
 
         full_data = np.empty((k2-k1+1, numb_simul))
-        progress_bar = tqdm(range(k1, k2+1))
+        progress_bar = tqdm(range(k1, k2+1),leave=False)
         progress_bar.set_description('Simulation progress')
 
         dom = []
@@ -152,6 +152,7 @@ def main():
 
     numb_simul, k2 = simulation_manager(simulator.model, simulator.time_budget, simulator.pre_simulation_budget)
     k1 = np.max([k2 - simulator.J,0])
+    print(f'k1 : {k1}')
 
     data, dom, time_taken = simulator.generate_full_data(k1, k2, numb_simul)
     simulator.save_data(data, dom, time_taken, numb_simul) # saving as json the results
