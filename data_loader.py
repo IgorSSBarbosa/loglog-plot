@@ -117,7 +117,7 @@ class DataLoader():
         pbar = tqdm(range(numb_simul),leave=False)
         pbar.set_description(f'Sampling for {n} size ...')
 
-        for i  in range(numb_simul):
+        for i  in pbar:
             data[i] = model(n)
         
         return data

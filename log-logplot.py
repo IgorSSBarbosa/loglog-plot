@@ -6,7 +6,8 @@ from scipy.stats import linregress
 
 class LoglogPlotter():
     def __init__(self,args):
-        self.data_path = args["data_path"]
+        self.simulation = args["data_path"]
+        self.data_path = 'simulation/'+ self.simulation + '/metadata.json'
         self.basex = args["basex"]
         self.basey = args["basey"]
 
@@ -15,7 +16,7 @@ class LoglogPlotter():
         parser.add_argument(
             "--data_path",
             type=str,
-            default='simulation_data/srw08-11-2025_19-20-57/metadata.json'
+            default='srw08-11-2025_19-20-57'
         )
         parser.add_argument(
             "--basex",
@@ -86,7 +87,7 @@ class LoglogPlotter():
             ax.grid()
             ax.grid(which='minor', color="0.9")
 
-            plt.savefig('images/plot_percolation08-06-2025_10-32-50.png')
+            plt.savefig(f'images/plot_{self.simulation}.png')
 
 
         return alpha, r_squared
