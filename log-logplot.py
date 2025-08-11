@@ -91,7 +91,36 @@ class LoglogPlotter():
 
 
         return alpha, r_squared
+    def Richardson_step(self,dom,X_n):
+        R = []
+        J = len(X_n) -1 
+        for i in range(J):
+            n1, n2 = dom[i],dom[i+1]
+            f1, f2 = X_n[i],X_n[i+1]
+            extrapol = ((n2**2)*f2 - (n1**2)*f1)/(n2**2 - n1**2)
+            R.append(extrapol)
+
+        new_dom = [dom[i+1] for i in range(J)]
+
+        return R, new_dom
     
+    def richardson_matrix(self, dom, X_n):
+        J = len(dom)
+        delta = np.zeros(J-1)
+        R = np.zeros((J-1,J-1))
+        # Calculate de inclination of each step of the log-log plot
+        for i in range(J-1):
+            delta[i] = (np.log(X_n[i+1]) - np.log(X_n[i])) / ( np.log(dom[i+1]) - np.log(dom[i]) )
+        j=0
+        while len(dom)>0:
+            aux = np.zeros(J-1)
+            for i in range(len(delta)):
+                aux[i] = delta[i]
+            R[j] = aux
+            j+=1
+            delta, dom = self.Richardson_step(dom, delta)
+        return R
+
     def plot(self):
         with open(self.data_path, 'r') as f:
             json_file = json.load(f)
@@ -102,6 +131,9 @@ class LoglogPlotter():
         alpha, r_squared = self.compute_critical_exponent(dom, X_n, plot=True)
         print(f'alpha = {alpha}')
         print(f'r² = {r_squared}')
+
+        R = self.richardson_matrix(dom,X_n)
+        print(R)
 
 
 
