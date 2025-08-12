@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 from models.srw import srw
 
-def meta_algorithm_complexity(model,time_budget=10,numbsimul=10,k1=2,plot=False):
+def meta_algorithm_complexity(model,seed,time_budget=10,numbsimul=10,k1=2,plot=False):
 
     start_time = time.time()
     t = []
@@ -15,7 +15,7 @@ def meta_algorithm_complexity(model,time_budget=10,numbsimul=10,k1=2,plot=False)
         t_aux = np.empty((numbsimul,1))
         for j in range(numbsimul):
             lap_time = time.time()
-            a_aux[j]=model(pow(2,k))  # running the model
+            a_aux[j]=model(pow(2,k),seed)  # running the model
             time_time = time.time()- lap_time
             t_aux[j]=time_time
         a.append(a_aux)
@@ -61,10 +61,10 @@ def meta_algorithm_complexity(model,time_budget=10,numbsimul=10,k1=2,plot=False)
 
     return d,k
 
-def budget_unit(model,budget_time=10,numbsimul=10):
+def budget_unit(model,seed,budget_time=10,numbsimul=10):
     start_time = time.time()
 
-    d,k2 = meta_algorithm_complexity(model,budget_time/2,numbsimul)  #------------- re do it right ---------------------
+    d,k2 = meta_algorithm_complexity(model,seed,budget_time/2,numbsimul)  #------------- re do it right ---------------------
     k1 = 2
     domain = range(k1,k2)
     sub_budget_time = budget_time/(2*(k2-k1))
@@ -75,7 +75,7 @@ def budget_unit(model,budget_time=10,numbsimul=10):
         lap_time = time.time()
         aux = []
         while time.time()-lap_time < sub_budget_time:
-            aux.append(model(pow(2,k)))
+            aux.append(model(pow(2,k),seed))
         a.append(aux)
         simulation.append(len(aux)*(pow(2,d*k)))
 
@@ -95,7 +95,7 @@ def optimal_sizes(bd,total_budget,d):
     k2 = int((1/(d+2))*np.log(bd*total_budget)/np.log(2))
     return numb_simul,k2
 
-def simulation_manager(model,total_budget,budget_time=0.1):
+def simulation_manager(model,seed,total_budget,budget_time=0.1):
     '''
     parameters
     model: function,
@@ -110,7 +110,7 @@ def simulation_manager(model,total_budget,budget_time=0.1):
     error_margin = 0.2
 
     # first approximation of constants bd,d
-    bd_aux,d_aux = budget_unit(model,1) # it runs for only one second
+    bd_aux,d_aux = budget_unit(model,seed,1) # it runs for only one second
     numb_simul_aux,k2_aux = optimal_sizes(bd_aux, budget_time*total_budget, d_aux*(1+error_margin))
     print(f"numbsimul_aux={numb_simul_aux}, k2_aux={k2_aux}")
 
@@ -118,7 +118,7 @@ def simulation_manager(model,total_budget,budget_time=0.1):
 
     # Better approximation of constants bd,d
     print(f"running with model={model}, total_budget = {budget_time*total_budget}, numbsimulations= {numb_simul_aux} ")
-    bd, d = budget_unit(model,budget_time*total_budget,numbsimul=int(numb_simul_aux))
+    bd, d = budget_unit(model,seed,budget_time*total_budget,numbsimul=int(numb_simul_aux))
 
     # Calculating the "optimal" size of simulation k and Numbsimul
     numb_simul,k2 = optimal_sizes(bd,total_budget*(1-budget_time),d*(1+error_margin))
@@ -128,6 +128,6 @@ def simulation_manager(model,total_budget,budget_time=0.1):
 
 if __name__ == '__main__':
     # Example of usage
-
-    numb_simul, k2 = simulation_manager(srw, total_budget= 3600, budget_time=0.01)
+    seed = 100
+    numb_simul, k2 = simulation_manager(srw, seed, total_budget= 3600, budget_time=0.01)
 

@@ -100,7 +100,6 @@ class DataLoader():
             "time_taken": time_taken,
             "n_variation": dom,
             "number_of_simulations": numb_simul,
-            "results": data.tolist(),  # Convert ndarray to list
         }
 
         # create diretory
@@ -118,6 +117,8 @@ class DataLoader():
         print(f'save data in: {metadata_path}')
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=4)
+        simulation_path = out_put_path + "/simulations"
+        np.save(simulation_path, data)
 
     def generate_data(self, model, seed, n, numb_simul):
         data = np.zeros(numb_simul)
@@ -156,8 +157,9 @@ def main():
     args = parser.parse_args() # Use empty list to avoid command line parsing
 
     simulator = DataLoader(vars(args))
+    meta_algorithm_seed = 100
 
-    numb_simul, k2 = simulation_manager(simulator.model, simulator.time_budget, simulator.pre_simulation_budget)
+    numb_simul, k2 = simulation_manager(simulator.model,meta_algorithm_seed, simulator.time_budget, simulator.pre_simulation_budget)
     k1 = np.max([k2 - simulator.J,0])
     print(f'k1 : {k1}')
 
