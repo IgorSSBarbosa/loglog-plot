@@ -25,6 +25,7 @@ class DataLoader():
         self.savedir = args["save_directory"]
         self.J = args['j']
         self.pre_simulation_budget = args['pre_simulation_budget']
+        self.seed = args["seed"]
 
     @staticmethod
     def add_arguments(parser):
@@ -76,12 +77,18 @@ class DataLoader():
         parser.add_argument(
             "--j",
             type=int,
-            default=10
+            default=10,
         )
         parser.add_argument(
             "--pre_simulation_budget",
             type=float,
-            default=0.01
+            default=0.01,
+        )
+        parser.add_argument(
+            "--seed",
+            type=int,
+            default=100,
+            help= "Random seed to reproducibility of simulations",
         )
 
     def save_data(self,data, dom, time_taken, numb_simul):
@@ -112,13 +119,13 @@ class DataLoader():
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=4)
 
-    def generate_data(self, model, n, numb_simul):
+    def generate_data(self, model, seed, n, numb_simul):
         data = np.zeros(numb_simul)
         pbar = tqdm(range(numb_simul),leave=False)
         pbar.set_description(f'Sampling for {n} size ...')
 
         for i  in pbar:
-            data[i] = model(n)
+            data[i] = model(n,seed)
         
         return data
     
@@ -135,7 +142,7 @@ class DataLoader():
         for i,k in enumerate(progress_bar):
             n = pow(self.rho,k)
             dom.append(n)
-            full_data[i,:] = self.generate_data(self.model,n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
+            full_data[i,:] = self.generate_data(self.model, self.seed,n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
         
         end_time = time()
         time_taken = end_time - start_time
