@@ -120,18 +120,21 @@ class DataLoader():
         simulation_path = out_put_path + "/simulations"
         np.save(simulation_path, data)
 
-    def generate_data(self, model, seed, n, numb_simul):
+    def generate_data(self, model, n, numb_simul):
         data = np.zeros(numb_simul)
         pbar = tqdm(range(numb_simul),leave=False)
         pbar.set_description(f'Sampling for {n} size ...')
 
         for i  in pbar:
-            data[i] = model(n,seed)
+            data[i] = model(n)
         
         return data
     
     def generate_full_data(self, k1, k2, numb_simul):
         assert k1 < k2, "[k1, k2] must be a valid interval, k1 < k2"
+        
+        # Set the seed for reproducibility
+        np.random.seed(self.seed)
 
         start_time = time()
 
@@ -143,7 +146,7 @@ class DataLoader():
         for i,k in enumerate(progress_bar):
             n = pow(self.rho,k)
             dom.append(n)
-            full_data[i,:] = self.generate_data(self.model, self.seed,n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
+            full_data[i,:] = self.generate_data(self.model, n+1, numb_simul) # I am simulating random walks with an odd number of steps to avoid rw=0 that gives problems when take log
         
         end_time = time()
         time_taken = end_time - start_time
@@ -157,9 +160,8 @@ def main():
     args = parser.parse_args() # Use empty list to avoid command line parsing
 
     simulator = DataLoader(vars(args))
-    meta_algorithm_seed = 100
 
-    numb_simul, k2 = simulation_manager(simulator.model,meta_algorithm_seed, simulator.time_budget, simulator.pre_simulation_budget)
+    numb_simul, k2 = simulation_manager(simulator.model, simulator.time_budget, simulator.pre_simulation_budget)
     k1 = np.max([k2 - simulator.J,0])
     print(f'k1 : {k1}')
 

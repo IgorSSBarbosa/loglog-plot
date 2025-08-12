@@ -6,9 +6,8 @@ import numpy as np
 - (1-q) is the probability of an downward step (-1)
 '''
 
-def srw(k,rand_seed,q=0.5):
-    # Set the seed for reproducibility
-    np.random.seed(rand_seed)
+def srw(k,q=0.5):
+
     x = np.random.choice([-1,1],k, p=[1-q, q])
     rw = sum(x)
     return np.abs(rw)
@@ -16,5 +15,4 @@ def srw(k,rand_seed,q=0.5):
 if __name__=="__main__":
     ''' Example of usage '''
     k = 15
-    seed=100
-    print(srw(k,seed))
+    print(srw(k))
