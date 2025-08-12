@@ -7,7 +7,7 @@ from scipy.stats import linregress
 class LoglogPlotter():
     def __init__(self,args):
         self.simulation = args["data_path"]
-        self.data_path = 'simulation_data/'+ self.simulation + '/metadata.json'
+        self.data_path = 'simulation_data/'+ self.simulation
         self.basex = args["basex"]
         self.basey = args["basey"]
 
@@ -16,7 +16,7 @@ class LoglogPlotter():
         parser.add_argument(
             "--data_path",
             type=str,
-            default='srw08-11-2025_19-20-57'
+            default='srw08-12-2025_09-46-53'
         )
         parser.add_argument(
             "--basex",
@@ -122,9 +122,11 @@ class LoglogPlotter():
         return R
 
     def plot(self):
-        with open(self.data_path, 'r') as f:
+        metadata_path = self.data_path + '/metadata.json'
+        with open(metadata_path, 'r') as f:
             json_file = json.load(f)
-        data = json_file['results']
+        simulation_path = self.data_path + '/simulations.npy'
+        data = np.load(simulation_path)
         dom = json_file['n_variation']
         X_n, var = self.compute_estimators(data)
         # The variance will be used to compute confidence intervals 
