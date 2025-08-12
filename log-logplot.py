@@ -91,13 +91,13 @@ class LoglogPlotter():
 
 
         return alpha, r_squared
-    def Richardson_step(self,dom,X_n):
+    def Richardson_step(self,dom,X_n,j):
         R = []
         J = len(X_n) -1 
         for i in range(J):
             n1, n2 = dom[i],dom[i+1]
             f1, f2 = X_n[i],X_n[i+1]
-            extrapol = ((n2**2)*f2 - (n1**2)*f1)/(n2**2 - n1**2)
+            extrapol = ((n2**j)*f2 - (n1**j)*f1)/(n2**j - n1**j)
             R.append(extrapol)
 
         new_dom = [dom[i+1] for i in range(J)]
@@ -118,7 +118,7 @@ class LoglogPlotter():
                 aux[i] = delta[i]
             R[j] = aux
             j+=1
-            delta, dom = self.Richardson_step(dom, delta)
+            delta, dom = self.Richardson_step(dom, delta,j)
         return R
 
     def plot(self):
