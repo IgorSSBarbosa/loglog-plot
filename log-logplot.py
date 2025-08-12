@@ -137,6 +137,17 @@ class LoglogPlotter():
         R = self.richardson_matrix(dom,X_n)
         print(R)
 
+        results_dict = {
+            'alpha_log_logplot': alpha,
+            'Richardson_Matrix': R.tolist(),
+        }
+        # save results 
+
+        results_path = self.data_path + "/log_logplot_results.json"
+        print(f'save data in: {results_path}')
+        with open(results_path, "w") as f:
+            json.dump(results_dict, f, indent=4)
+
 
 
 if __name__=="__main__":
